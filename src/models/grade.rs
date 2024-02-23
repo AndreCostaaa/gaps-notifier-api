@@ -4,14 +4,20 @@ use std::hash::{Hash, Hasher};
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Grade {
     pub course: String,
-    pub class: char,
+    pub class: String,
     pub year: u32,
     pub name: String,
     pub class_average: f32,
 }
 
 impl Grade {
-    pub fn new(course: String, class: char, year: u32, name: String, class_average: f32) -> Grade {
+    pub fn new(
+        course: String,
+        class: String,
+        year: u32,
+        name: String,
+        class_average: f32,
+    ) -> Grade {
         Grade {
             course,
             class,
