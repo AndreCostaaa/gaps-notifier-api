@@ -12,10 +12,32 @@ axum = "0.7.4"
 # Async
 tokio = { version = "1", features = ["full"] }
 
+# Protocol Handler
+tower = { version = "0.4", features = ["util", "timeout"] }
+tower-http = { version = "0.5.0", features = ["add-extension", "trace"] }
+
+# Logging
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+
+
 #Serialization and Deserialization
 serde = { version = "~1.0.193", features = ["derive"] } 
 serde_json = { version = "~1.0.108" } 
-redis = "0.24.0"
 
 # Discord
 webhook = "2.1.2"
+
+redis = { version = "0.24.0", features = ["tokio-comp", "aio", "connection-manager"] }
+
+chrono = "0.4.34"
+
+
+# uuid
+[dependencies.uuid]
+version = "1.7.0"
+features = [
+    "v4",                # Lets you generate random UUIDs
+    "fast-rng",          # Use a faster (but still sufficiently random) RNG
+    "macro-diagnostics", # Enable better diagnostics for compile-time UUIDs
+]

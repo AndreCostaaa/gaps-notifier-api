@@ -1,22 +1,30 @@
+
+use super::identifiable::Identifiable;
 use serde::{Deserialize, Serialize};
 use std::hash::{Hash, Hasher};
-
+use crate::logic;
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Grade {
     pub course: String,
     pub class: String,
-    pub year: u32,
+    pub year: i32,
     pub name: String,
-    pub class_average: f32,
+    pub class_average: f64,
+}
+
+impl Identifiable for Grade {
+    fn get_id(&self) -> u128 {
+        logic::hashing::calculate_hash(self).into()
+    }
 }
 
 impl Grade {
     pub fn new(
         course: String,
         class: String,
-        year: u32,
+        year: i32,
         name: String,
-        class_average: f32,
+        class_average: f64,
     ) -> Grade {
         Grade {
             course,
