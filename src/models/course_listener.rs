@@ -18,7 +18,7 @@ pub struct CourseListener {
     pub listener: Listener,
     pub course: String,
     pub class: String,
-    pub year: u32,
+    pub year: i32,
     pub webhook_url: String,
 }
 
@@ -33,7 +33,7 @@ impl CourseListener {
         listener: Listener,
         course: String,
         class: String,
-        year: u32,
+        year: i32,
         webhook_url: String,
     ) -> CourseListener {
         CourseListener {
@@ -44,7 +44,7 @@ impl CourseListener {
             webhook_url,
         }
     }
-    pub fn compute_key(class: &String, course: &String, year: u32) -> u64 {
+    pub fn compute_key(class: &String, course: &String, year: i32) -> u64 {
         let mut hasher = DefaultHasher::new();
         class.hash(&mut hasher);
         course.hash(&mut hasher);
