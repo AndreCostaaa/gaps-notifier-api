@@ -6,8 +6,10 @@ use axum::{
 };
 pub mod api;
 pub mod db;
+pub mod discord;
 pub mod logic;
 pub mod models;
+
 use std::{env, time::Duration};
 use tower::{BoxError, ServiceBuilder};
 use tower_http::trace::TraceLayer;
