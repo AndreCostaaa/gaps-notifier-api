@@ -6,7 +6,7 @@ pub trait Database {
     where
         T: Hash + serde::Serialize;
 
-    fn fetch<T>(&mut self, obj_id: u64) -> Option<T>
+    fn fetch<T>(&mut self, obj_id: u128) -> Option<T>
     where
         T: serde::de::DeserializeOwned;
 
