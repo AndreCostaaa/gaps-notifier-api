@@ -1,7 +1,4 @@
-use std::error::Error;
-
-use redis::{Client, Commands, Connection, RedisError, RedisResult};
-use tokio::time::error::Elapsed;
+use redis::{Commands, Connection, RedisResult};
 
 use crate::db::db::Database;
 use crate::models::hashing::calculate_hash;
@@ -46,7 +43,7 @@ impl Database for RedisDb {
         }
         false
     }
-    fn get<T>(&mut self, obj_id: u64) -> Option<T>
+    fn fetch<T>(&mut self, obj_id: u64) -> Option<T>
     where
         T: serde::de::DeserializeOwned,
     {
