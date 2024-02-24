@@ -1,24 +1,31 @@
-use axum::{error_handling::HandleErrorLayer, http::StatusCode, routing::get, Router};
+use axum::{
+    error_handling::HandleErrorLayer,
+    http::StatusCode,
+    routing::{get, post},
+    Router,
+};
 pub mod api;
 pub mod db;
 pub mod logic;
 pub mod models;
-use api::{course_listener, grade, listener, state::ApiState};
-use std::{env, sync::Arc, time::Duration};
+use std::{env, time::Duration};
 use tower::{BoxError, ServiceBuilder};
 use tower_http::trace::TraceLayer;
-use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
 #[tokio::main]
 async fn main() {
     let db = db::redis::RedisDb::new(&env::var("REDIS_URL").expect("REDIS_URL not set")).await;
 
-    let appState = ApiState { redis_db: db };
-
     let app = Router::new()
-        .nest("/api", api::listener::routes())
-        .nest("/api", course_listener::routes())
-        .nest("/api", api::grade::routes())
+        .route(
+            "/api/listener",
+            get(api::listener::get_listener).post(api::listener::post_listener),
+        )
+        .route(
+            "/api/course_listener",
+            post(api::course_listener::register_course_listener),
+        )
+        .route("/api/grade", post(api::grade::create_grade))
         .layer(
             ServiceBuilder::new()
                 .layer(HandleErrorLayer::new(|error: BoxError| async move {
@@ -35,10 +42,10 @@ async fn main() {
                 .layer(TraceLayer::new_for_http())
                 .into_inner(),
         )
-        .with_state(appState);
+        .with_state(api::state::ApiState { redis_db: db });
 
-    let listener = tokio::net::TcpListener::bind("127.0.0.1:3000")
+    let tcp_listener = tokio::net::TcpListener::bind("127.0.0.1:3000")
         .await
         .unwrap();
-    axum::serve(listener, app).await.unwrap();
+    axum::serve(tcp_listener, app).await.unwrap();
 }
