@@ -6,28 +6,24 @@ use axum::{
 };
 
 use super::state::ApiState;
-use crate::db::db::Database;
-use crate::models::listener::Listener;
+use crate::logic;
 
-pub fn create_listener(State(db): State<ApiState>) -> impl IntoResponse {
-    let listener = Listener::new_with_random_uuid();
-
-    Json(listener)
+pub async fn post_listener(State(mut api_state): State<ApiState>) -> impl IntoResponse {
+    let listener = logic::listener::create_listener(&mut api_state.redis_db).await;
+    match listener {
+        Some(listener) => (StatusCode::OK, Json(listener)).into_response(),
+        None => StatusCode::CONFLICT.into_response(),
+    }
 }
 
 pub async fn get_listener(
-    State(mut apiState): State<ApiState>,
-    listener_id: Path<u128>,
+    State(mut api_state): State<ApiState>,
+    Path(listener_id): Path<u128>,
 ) -> impl IntoResponse {
-    let listener: Option<Listener> = apiState.redis_db.fetch(*listener_id);
+    let listener = logic::listener::get_listener(&mut api_state.redis_db, listener_id).await;
 
     match listener {
         Some(listener) => (StatusCode::OK, Json(listener)).into_response(),
-        None => (StatusCode::NOT_FOUND).into_response(),
+        None => StatusCode::NOT_FOUND.into_response().into_response(),
     }
-}
-pub fn routes() -> axum::routing::Router {
-    axum::Router::new()
-        .route("/listener", axum::routing::post(create_listener))
-        .route("/listener/:listener_id", axum::routing::get(get_listener))
 }
