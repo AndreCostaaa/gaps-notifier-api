@@ -1,11 +1,6 @@
-use crate::{
-    db::db::Database,
-    logic::utils::current_school_year,
-    models::{course_listener::CourseListener, grade::Grade, hashing::calculate_hash},
-};
-
 use super::state::ApiState;
-use axum::{extract::State, http::StatusCode, response::IntoResponse, Json};
+use crate::logic::grade;
+use axum::{extract::State, http::StatusCode, response::IntoResponse, routing::post, Json};
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -16,34 +11,22 @@ struct GradeCreateArgs {
     class_average: f64,
 }
 
-pub fn create_grade(
+pub async fn create_grade(
     State(mut apiState): State<ApiState>,
-    body: Json<GradeCreateArgs>,
+    Json(body): Json<GradeCreateArgs>,
 ) -> impl IntoResponse {
-    let grade = Grade::new(
-        body.course.clone(),
-        body.class.clone(),
-        current_school_year(),
-        body.name.clone(),
+    match grade::register_grade(
+        &mut apiState.redis_db,
+        body.course,
+        body.name,
+        body.class,
         body.class_average,
-    );
-
-    let grade_hash = calculate_hash(&grade);
-    let grade_fetch: Option<Grade> = apiState.redis_db.fetch(grade_hash)
-    if let Some(_) = grade_fetch {
-        return StatusCode::CONFLICT;
+    ) {
+        true => (StatusCode::CREATED, "Grade created"),
+        false => (StatusCode::CONFLICT, "Grade already exists"),
     }
-
-    match apiState.redis_db.save(&grade) {
-        true => StatusCode::CREATED,
-        false => StatusCode::INTERNAL_SERVER_ERROR,
-    }
-    //TODO notify listeners
-    //let course_listener_key = CourseListener::compute_key(&grade.class, &grade.course, grade.year);
-    // get course listeners using course_listener_key
-    // for each listener, send a notification using webhook_url
 }
 
 pub fn routes() -> axum::routing::Router {
-    axum::Router::new().route("/grade", axum::routing::post(create_grade))
+    axum::Router::new().route("/grade", post(create_grade))
 }
