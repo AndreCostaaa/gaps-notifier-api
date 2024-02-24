@@ -5,7 +5,10 @@
  * Author: André Costa
  * A listener defines a
  */
-use std::hash::Hash;
+use std::{
+    collections::hash_map::DefaultHasher,
+    hash::{Hash, Hasher},
+};
 
 use serde::{Deserialize, Serialize};
 
@@ -34,5 +37,12 @@ impl CourseListener {
             year,
             webhook_url,
         }
+    }
+    pub fn compute_key(class: &String, course: &String, year: u32) -> u64 {
+        let mut hasher = DefaultHasher::new();
+        class.hash(&mut hasher);
+        course.hash(&mut hasher);
+        year.hash(&mut hasher);
+        hasher.finish()
     }
 }
