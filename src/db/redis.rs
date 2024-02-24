@@ -1,8 +1,9 @@
 use redis::{Commands, Connection, RedisResult};
 
 use crate::db::db::Database;
-use crate::models::hashing::calculate_hash;
+use crate::logic::hashing::calculate_hash;
 use std::hash::Hash;
+
 pub struct RedisDb {
     connection: Connection,
 }
@@ -43,7 +44,7 @@ impl Database for RedisDb {
         }
         false
     }
-    fn fetch<T>(&mut self, obj_id: u64) -> Option<T>
+    fn fetch<T>(&mut self, obj_id: u128) -> Option<T>
     where
         T: serde::de::DeserializeOwned,
     {
