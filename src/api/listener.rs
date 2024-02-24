@@ -16,14 +16,14 @@ pub fn create_listener(State(db): State<ApiState>) -> impl IntoResponse {
 }
 
 pub async fn get_listener(
-    State(apiState): State<ApiState>,
-    listener_id: Path<u64>,
+    State(mut apiState): State<ApiState>,
+    listener_id: Path<u128>,
 ) -> impl IntoResponse {
-    let listener: Option<Listener> = apiState.redis_db.fetch(listener_id);
+    let listener: Option<Listener> = apiState.redis_db.fetch(*listener_id);
 
     match listener {
-        Some(listener) => Json(listener),
-        None => StatusCode::NOT_FOUND,
+        Some(listener) => (StatusCode::OK, Json(listener)).into_response(),
+        None => (StatusCode::NOT_FOUND).into_response(),
     }
 }
 pub fn routes() -> axum::routing::Router {
