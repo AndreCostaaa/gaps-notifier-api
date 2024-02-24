@@ -11,11 +11,7 @@ use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
 #[tokio::main]
 async fn main() {
-    let db = db::redis::RedisDb::new(
-        &env::var("REDIS_HOSTNAME").expect("REDIS_HOSTNAME is not set"),
-        &env::var("REDIS_PASSWORD").expect("REDIS_PASSWORD is not set"),
-        env::var("REDIS_TLS").expect("REDIS_TLS is not set") == "true",
-    );
+    let db = db::redis::RedisDb::new(&env::var("REDIS_URL").expect("REDIS_URL not set")).await;
 
     let appState = ApiState { redis_db: db };
 

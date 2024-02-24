@@ -2,11 +2,11 @@ use std::hash::Hash;
 
 pub struct NotFoundErr {}
 pub trait Database {
-    fn save<T>(&mut self, obj: &T) -> bool
+    async fn save<T>(&mut self, obj: &T) -> bool
     where
         T: Hash + serde::Serialize;
 
-    fn fetch<T>(&mut self, obj_id: u128) -> Option<T>
+    async fn fetch<T>(&mut self, obj_id: u128) -> Option<T>
     where
         T: serde::de::DeserializeOwned;
 

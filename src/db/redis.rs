@@ -1,34 +1,37 @@
-use redis::{Commands, Connection, RedisResult};
+use redis::{aio::ConnectionManager, AsyncCommands, RedisResult};
 
 use crate::db::db::Database;
 use crate::logic::hashing::calculate_hash;
 use std::hash::Hash;
 
+#[derive(Clone)]
 pub struct RedisDb {
-    connection: Connection,
+    connection: ConnectionManager,
 }
 
 impl RedisDb {
-    fn get(&mut self, key: &String) -> RedisResult<String> {
-        Ok(self.connection.get(key)?)
+    async fn get(&mut self, key: &String) -> RedisResult<String> {
+        Ok(self.connection.get(key).await?)
     }
 
-    fn set(&mut self, key: &String, value: &String) -> RedisResult<()> {
-        Ok(self.connection.set(key, value)?)
+    async fn set(&mut self, key: &String, value: &String) -> RedisResult<()> {
+        Ok(self.connection.set(key, value).await?)
     }
-    pub fn new(hostname: &String, password: &String, tls: bool) -> RedisDb {
-        let connection =
-            redis::Client::open(get_connection_url(get_uri_scheme(tls), hostname, password))
-                .expect("Invalid connection URL")
-                .get_connection()
-                .expect("Failed to connect to redis");
+    pub async fn new(url: &String) -> RedisDb {
+        let connection_manager = redis::Client::open(url.as_str())
+            .expect("Invalid connection URL")
+            .get_connection_manager()
+            .await
+            .expect("Failed to create connection manager");
 
-        RedisDb { connection }
+        RedisDb {
+            connection: connection_manager,
+        }
     }
 }
 
 impl Database for RedisDb {
-    fn save<T>(&mut self, obj: &T) -> bool
+    async fn save<T>(&mut self, obj: &T) -> bool
     where
         T: Hash + serde::Serialize,
     {
@@ -37,18 +40,18 @@ impl Database for RedisDb {
         let repr = self.serialize(obj);
 
         if let Some(repr) = repr {
-            match self.set(&key, &repr) {
+            match self.set(&key, &repr).await {
                 Ok(_) => return true,
                 Err(_) => return false,
             }
         }
         false
     }
-    fn fetch<T>(&mut self, obj_id: u128) -> Option<T>
+    async fn fetch<T>(&mut self, obj_id: u128) -> Option<T>
     where
         T: serde::de::DeserializeOwned,
     {
-        let result = self.get(&obj_id.to_string());
+        let result = self.get(&obj_id.to_string()).await;
 
         if let Ok(result) = result {
             self.deserialize(&result)
@@ -64,10 +67,6 @@ fn get_uri_scheme(tls: bool) -> &'static str {
     }
 }
 
-fn get_connection_url(scheme: &str, hostname: &String, password: &String) -> String {
-    format!("{}://:{}@{}", scheme, password, hostname)
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -76,15 +75,5 @@ mod tests {
     fn test_uri_scheme() {
         assert_eq!(get_uri_scheme(true), "rediss");
         assert_eq!(get_uri_scheme(false), "redis");
-    }
-    #[test]
-    fn test_connection_url() {
-        let scheme = "scheme";
-        let hostname = "hostname";
-        let password = "password";
-        assert_eq!(
-            get_connection_url(scheme, &hostname.to_string(), &password.to_string()),
-            "scheme://:password@hostname"
-        )
     }
 }
