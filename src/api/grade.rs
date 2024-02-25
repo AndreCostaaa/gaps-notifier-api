@@ -1,4 +1,4 @@
-use super::state::ApiState;
+use super::{authorization::Token, state::ApiState};
 use crate::logic;
 use axum::{extract::State, http::StatusCode, response::IntoResponse, Json};
 use serde::{Deserialize, Serialize};
@@ -13,8 +13,10 @@ pub struct GradeCreateArgs {
 
 pub async fn create_grade(
     State(mut api_state): State<ApiState>,
-    Json(body): Json<GradeCreateArgs>,
+    _token: Token,
+    body: Json<GradeCreateArgs>,
 ) -> impl IntoResponse {
+    let body = body.0;
     match logic::grade::register_grade(
         &mut api_state.redis_db,
         body.course,
@@ -24,7 +26,7 @@ pub async fn create_grade(
     )
     .await
     {
-        true => (StatusCode::CREATED, "Grade created"),
-        false => (StatusCode::CONFLICT, "Grade already exists"),
+        true => (StatusCode::CREATED, "Grade created").into_response(),
+        false => (StatusCode::CONFLICT, "Grade already exists").into_response(),
     }
 }
