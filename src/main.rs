@@ -50,8 +50,6 @@ async fn main() {
         )
         .with_state(api::state::ApiState { redis_db: db });
 
-    let tcp_listener = tokio::net::TcpListener::bind("127.0.0.1:3000")
-        .await
-        .unwrap();
+    let tcp_listener = tokio::net::TcpListener::bind("0.0.0.0:3000").await.unwrap();
     axum::serve(tcp_listener, app).await.unwrap();
 }

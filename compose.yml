@@ -1,0 +1,16 @@
+services:
+  api:
+    image: andrecosta222/gaps-notifier-api
+    restart: always
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - 3000:3000
+    env_file:
+      - .env
+  redis:
+    image: redis
+    restart: always
+    ports:
+      - 6379:6379
