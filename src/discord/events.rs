@@ -1,9 +1,9 @@
 use webhook::client::{WebhookClient, WebhookResult};
 
-use crate::models::{course_listener::CourseListener, grade::Grade};
+use crate::models::grade::Grade;
 
-pub async fn send_event(listener: &CourseListener, grade: &Grade) -> WebhookResult<()> {
-    let client = WebhookClient::new(&listener.webhook_url);
+pub async fn send_event(webhook_url: &str, grade: &Grade) -> WebhookResult<()> {
+    let client = WebhookClient::new(&webhook_url);
     let mention = ""; //"@here";
     client
         .send(|message| {

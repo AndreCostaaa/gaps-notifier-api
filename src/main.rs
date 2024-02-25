@@ -20,14 +20,16 @@ async fn main() {
 
     let app = Router::new()
         .route("/api/token", post(api::authorization::get_token))
+        .route("/api/user/:user_id", get(api::user::get_user))
+        .route("/api/user", post(api::user::create_user))
         .route(
-            "/api/listener/:listener_id",
-            get(api::listener::get_listener),
+            "/api/subscribe",
+            post(api::subscriber::register_course_subscriber),
         )
-        .route("/api/listener", post(api::listener::post_listener))
+        .route("/api/subscribe/all", post(api::subscriber::register_spy))
         .route(
-            "/api/course_listener",
-            post(api::course_listener::register_course_listener),
+            "/api/spy",
+            get(api::subscriber::get_spies).delete(api::subscriber::delete_spy),
         )
         .route("/api/grade", post(api::grade::create_grade))
         .layer(

@@ -20,10 +20,10 @@ pub struct TokenResponse {
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct TokenRequest {
-    listener_id: u128,
+    user_id: u128,
 }
 pub async fn get_token(body: Json<TokenRequest>) -> impl IntoResponse {
-    match generate_token(body.listener_id, false) {
+    match generate_token(body.user_id, false) {
         Ok(token) => {
             return (StatusCode::OK, Json(token)).into_response();
         }
@@ -74,7 +74,7 @@ impl IntoResponse for AuthError {
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Token {
-    pub listener_id: u128,
+    pub user_id: u128,
     pub exp: i64,
     pub is_admin: bool,
 }
@@ -107,7 +107,7 @@ where
         if let Ok(admin_token) = admin_token {
             if token == admin_token {
                 return Ok(Token {
-                    listener_id: 0,
+                    user_id: 0,
                     exp: 0,
                     is_admin: true,
                 });
@@ -121,11 +121,11 @@ where
     }
 }
 
-fn generate_token(listener_id: u128, is_admin: bool) -> Result<TokenResponse, AuthError> {
+fn generate_token(user_id: u128, is_admin: bool) -> Result<TokenResponse, AuthError> {
     const ONE_DAY: i64 = 60 * 60 * 24;
     const FIVE_YEARS: i64 = ONE_DAY * 365 * 5;
     let token = Token {
-        listener_id,
+        user_id,
         is_admin,
         exp: if is_admin {
             chrono::Utc::now().timestamp() + ONE_DAY

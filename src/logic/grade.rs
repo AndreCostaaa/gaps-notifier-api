@@ -28,23 +28,29 @@ pub async fn register_grade<Db: Database>(
     let result = db.save_object(&grade).await;
     drop(guard);
 
-    let listeners = super::course_listener::get_course_listeners(db, &grade);
-    match listeners.await {
-        Some(listeners) => {
-            println!("Notifying {} listeners", listeners.len());
-            for listener in listeners {
-                match discord::events::send_event(&listener, &grade).await {
-                    //TODO handle errors
-                    Ok(_) => {}
-                    Err(e) => {
-                        println!("Error notifying listener: {}", e);
-                    }
-                }
+    let subscribers = super::subscriber::get_subscribers(db, &grade).await;
+
+    println!("Notifying {} subscribers", subscribers.len());
+    for sub in subscribers {
+        match discord::events::send_event(&sub.webhook_url, &grade).await {
+            //TODO handle errors
+            Ok(_) => (),
+            Err(e) => {
+                println!("Error notifying subscriber: {}", e);
             }
         }
-        None => {
-            info!("No listeners interested in this grade");
+    }
+    let spies = super::spy::get_spies(db).await;
+    println!("Notifying {} spies", spies.len());
+    for spy in spies {
+        match discord::events::send_event(&spy.webhook_url, &grade).await {
+            //TODO handle errors
+            Ok(_) => (),
+            Err(e) => {
+                println!("Error notifying spy: {}", e);
+            }
         }
     }
-    return result;
+
+    result
 }
