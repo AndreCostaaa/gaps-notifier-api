@@ -15,12 +15,9 @@ pub async fn create_listener<Db: Database>(db: &mut Db) -> Option<Listener> {
 }
 
 pub async fn get_listener<Db: Database>(db: &mut Db, id: u128) -> Option<Listener> {
-    db.fetch_from_list::<Listener>(LIST_NAME, id).await
+    db.fetch_from_list(LIST_NAME, id).await
 }
 
-pub async fn delete_listener<Db: Database>(db: &mut Db, id: u128) -> bool {
-    db.delete_from_list(LIST_NAME, &Listener::new(id)).await
-}
 pub async fn get_listeners<Db: Database>(db: &mut Db) -> Option<Vec<Listener>> {
     db.fetch_list(LIST_NAME).await
 }

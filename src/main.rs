@@ -19,10 +19,12 @@ async fn main() {
     let db = db::redis::RedisDb::new(&env::var("REDIS_URL").expect("REDIS_URL not set")).await;
 
     let app = Router::new()
+        .route("/api/token", post(api::authorization::get_token))
         .route(
-            "/api/listener",
-            get(api::listener::get_listener).post(api::listener::post_listener),
+            "/api/listener/:listener_id",
+            get(api::listener::get_listener),
         )
+        .route("/api/listener", post(api::listener::post_listener))
         .route(
             "/api/course_listener",
             post(api::course_listener::register_course_listener),
