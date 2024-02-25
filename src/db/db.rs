@@ -3,6 +3,8 @@ use std::hash::Hash;
 use crate::models::identifiable::Identifiable;
 
 pub struct NotFoundErr {}
+
+#[allow(async_fn_in_trait)] // TODO maybe remove this and actually implement std::future in the trait functions
 pub trait Database {
     async fn save_object<T>(&mut self, obj: &T) -> bool
     where
