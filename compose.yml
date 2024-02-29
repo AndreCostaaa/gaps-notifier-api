@@ -1,6 +1,6 @@
 services:
   api:
-    image: andrecosta222/gaps-notifier-api
+    image: ghcr.io/andrecostaaa/gaps-notifier-api:latest
     restart: always
     build:
       context: .
