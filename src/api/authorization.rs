@@ -1,6 +1,6 @@
 use axum::{
     async_trait,
-    extract::FromRequestParts,
+    extract::{FromRequestParts, State},
     http::{request::Parts, StatusCode},
     response::{IntoResponse, Response},
     Json,
@@ -8,9 +8,11 @@ use axum::{
 use jsonwebtoken::{decode, encode, DecodingKey, EncodingKey, Header, Validation};
 use once_cell::sync::Lazy;
 
+use crate::logic;
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 
+use super::state::ApiState;
 #[derive(Debug, Serialize, Deserialize)]
 pub struct TokenResponse {
     access_token: String,
@@ -22,12 +24,20 @@ pub struct TokenResponse {
 pub struct TokenRequest {
     user_id: u128,
 }
-pub async fn get_token(body: Json<TokenRequest>) -> impl IntoResponse {
-    match generate_token(body.user_id, false) {
-        Ok(token) => {
-            return (StatusCode::OK, Json(token)).into_response();
+pub async fn get_token(
+    State(mut api_state): State<ApiState>,
+    body: Json<TokenRequest>,
+) -> impl IntoResponse {
+    match logic::user::get_user(&mut api_state.redis_db, body.user_id).await {
+        Some(_) => match generate_token(body.user_id, false) {
+            Ok(token) => {
+                return (StatusCode::OK, Json(token)).into_response();
+            }
+            Err(e) => e.into_response(),
+        },
+        None => {
+            return AuthError::InvalidUser.into_response();
         }
-        Err(e) => e.into_response(),
     }
 }
 
@@ -55,6 +65,7 @@ pub enum AuthError {
     MissingCredentials,
     TokenCreation,
     InvalidToken,
+    InvalidUser,
 }
 
 impl IntoResponse for AuthError {
@@ -64,6 +75,8 @@ impl IntoResponse for AuthError {
             AuthError::MissingCredentials => (StatusCode::BAD_REQUEST, "Missing credentials"),
             AuthError::TokenCreation => (StatusCode::INTERNAL_SERVER_ERROR, "Token creation error"),
             AuthError::InvalidToken => (StatusCode::BAD_REQUEST, "Invalid token"),
+
+            AuthError::InvalidUser => (StatusCode::NOT_FOUND, "Invalid user"),
         };
         let body = Json(json!({
             "error": error_message,
