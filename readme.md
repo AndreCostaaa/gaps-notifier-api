@@ -192,7 +192,7 @@ _Main communication schema_
 
 ## Code
 
-- The source code is written in [rust](https://www.rust-lang.org/) using the (axum)[https://docs.rs/axum/latest/axum/] framework
+- The source code is written in [rust](https://www.rust-lang.org/) using the [axum](https://docs.rs/axum/latest/axum/) framework
 
 ## Deploying
 
